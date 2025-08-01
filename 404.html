@@ -1,12 +1,13 @@
+<!-- public/404.html -->
 <!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
 		<title>Redirecting...</title>
 		<script>
-			// Redirect all unknown routes to index.html so React Router can take over
+			// Redirect to the app's root with the lost path in query param
 			const path = window.location.pathname.replace("/ai-trip-planner", "");
-			window.location.replace("/ai-trip-planner/index.html?redirect=" + path);
+			window.location.replace("/ai-trip-planner/?redirect=" + path);
 		</script>
 	</head>
 	<body>
