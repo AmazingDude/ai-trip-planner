@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Redirecting...</title>
+		<script>
+			// Redirect all unknown routes to index.html so React Router can take over
+			const path = window.location.pathname.replace("/ai-trip-planner", "");
+			window.location.replace("/ai-trip-planner/index.html?redirect=" + path);
+		</script>
+	</head>
+	<body>
+		<h1>Redirecting...</h1>
+	</body>
+</html>
