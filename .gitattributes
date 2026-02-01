@@ -1,0 +1,5 @@
+# Exclude static/public assets from GitHub language statistics
+public/** linguist-generated=true
+
+# Treat Markdown as documentation (optional)
+*.md linguist-documentation=true

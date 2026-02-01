@@ -50,22 +50,24 @@ function Header() {
 			});
 	};
 
-	useEffect(() => {
-		console.log(user);
-	}, []);
+	// useEffect(() => {
+	// 	// console.log(user);
+	// }, []);
 
 	return (
 		<nav className="p-3 border flex justify-between items-center px-5">
-			<div className="flex items-center">
-				<img src="/logo.svg" alt="" />
-				<h1 className="font-bold text-2xl ml-2 font-google-sans text-gray-800">
-					TailTrails
-				</h1>
-			</div>
+			<a href="/ai-trip-planner">
+				<div className="flex items-center cursor-pointer">
+					<img src="./logo.svg" alt="" />
+					<h1 className="font-bold text-2xl ml-2 font-google-sans text-gray-800">
+						TailTrails
+					</h1>
+				</div>
+			</a>
 			<div>
 				{user ? (
 					<div className="flex items-center gap-3">
-						<a href="/create-trip">
+						<a href="/ai-trip-planner/create-trip">
 							<Button
 								variant="outline"
 								className="rounded-full hover:shadow-md cursor-pointer"
@@ -73,7 +75,7 @@ function Header() {
 								Create Trip
 							</Button>
 						</a>
-						<a href="/my-trips">
+						<a href="/ai-trip-planner/my-trips">
 							<Button
 								variant="outline"
 								className="rounded-full hover:shadow-md cursor-pointer"
@@ -117,7 +119,7 @@ function Header() {
 					<DialogHeader>
 						<DialogDescription>
 							<div className="flex items-center">
-								<img src="/logo.svg" alt="logo" />
+								<img src="./logo.svg" alt="logo" />
 								<h1 className="font-bold text-2xl ml-3 font-google-sans text-gray-800">
 									TailTrails
 								</h1>

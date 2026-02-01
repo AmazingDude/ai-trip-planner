@@ -6,7 +6,7 @@ function UserTripCardItem({ trip }) {
 		<Link to={"/view-trip/" + trip?.id}>
 			<div className="hover:scale-105 transition ease-in-out">
 				<img
-					src="/placeholder.jpg"
+					src="./placeholder.jpg"
 					alt="trip-img"
 					className="object-cover rounded-xl h-[180px]"
 				/>

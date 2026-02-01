@@ -11,25 +11,24 @@ import { Toaster } from "./components/ui/sonner";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import ViewTrip from "./view-trip/[tripID]";
 import MyTrips from "./my-trips";
+import RedirectHandler from "./components/RedirectHandler";
+import Root from "./Root.jsx";
 
-const router = createBrowserRouter([
-	{
-		path: "/",
-		element: <App />,
-	},
-	{
-		path: "/create-trip",
-		element: <CreateTrip />,
-	},
-	{
-		path: "/view-trip/:tripID",
-		element: <ViewTrip />,
-	},
-	{
-		path: "/my-trips",
-		element: <MyTrips />,
-	},
-]);
+const router = createBrowserRouter(
+	[
+		{
+			path: "/",
+			element: <Root />, // Root handles redirect and renders children
+			children: [
+				{ path: "/", element: <App /> },
+				{ path: "create-trip", element: <CreateTrip /> },
+				{ path: "view-trip/:tripID", element: <ViewTrip /> },
+				{ path: "my-trips", element: <MyTrips /> },
+			],
+		},
+	],
+	{ basename: "/ai-trip-planner" }
+);
 
 createRoot(document.getElementById("root")).render(
 	<StrictMode>
