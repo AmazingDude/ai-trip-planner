@@ -16,16 +16,27 @@ import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { LogOut, Map, Plus, Route } from "lucide-react";
 import axios from "axios";
+import { toast } from "sonner";
+
+function HeaderGoogleButton({ onSuccess, className }) {
+	const login = useGoogleLogin({
+		onSuccess,
+		onError: (error) => console.log(error),
+	});
+
+	return (
+		<Button onClick={login} className={className}>
+			<FcGoogle />
+			Sign In
+		</Button>
+	);
+}
 
 function Header() {
 	const user = JSON.parse(localStorage.getItem("user"));
 	const [openDialog, setOpenDialog] = useState(false);
 	const logoSrc = `${import.meta.env.BASE_URL}logo.svg`;
-
-	const login = useGoogleLogin({
-		onSuccess: (res) => getUserProfile(res),
-		onError: (error) => console.log(error),
-	});
+	const googleAuthEnabled = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_AUTH_KEY);
 
 	const getUserProfile = (tokenInfo) => {
 		axios
@@ -137,13 +148,22 @@ function Header() {
 								Sign In With Google
 							</h5>
 							<p>Sign in securely to the App with Google authentication.</p>
-							<Button
-								onClick={login}
-								className="mt-5 flex w-full items-center gap-2"
-							>
-								<FcGoogle />
-								Sign In
-							</Button>
+							{googleAuthEnabled ? (
+								<HeaderGoogleButton
+									onSuccess={(res) => getUserProfile(res)}
+									className="mt-5 flex w-full items-center gap-2"
+								/>
+							) : (
+								<Button
+									onClick={() =>
+										toast("Google sign-in is disabled in this demo build.")
+									}
+									className="mt-5 flex w-full items-center gap-2"
+								>
+									<FcGoogle />
+									Sign In Disabled
+								</Button>
+							)}
 						</DialogDescription>
 					</DialogHeader>
 				</DialogContent>

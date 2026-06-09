@@ -11,6 +11,12 @@ import ViewTrip from "./view-trip/[tripID]";
 import MyTrips from "./my-trips";
 import Root from "./Root.jsx";
 
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_AUTH_KEY;
+const routerBaseName =
+	import.meta.env.BASE_URL === "/"
+		? "/"
+		: import.meta.env.BASE_URL.replace(/\/$/, "");
+
 const router = createBrowserRouter(
 	[
 		{
@@ -24,14 +30,24 @@ const router = createBrowserRouter(
 			],
 		},
 	],
-	{ basename: "/ai-trip-planner" }
+	{ basename: routerBaseName }
+);
+
+const appContent = (
+	<>
+		<Toaster />
+		<RouterProvider router={router} />
+	</>
 );
 
 createRoot(document.getElementById("root")).render(
 	<StrictMode>
-		<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_AUTH_KEY}>
-			<Toaster />
-			<RouterProvider router={router} />
-		</GoogleOAuthProvider>
+		{googleClientId ? (
+			<GoogleOAuthProvider clientId={googleClientId}>
+				{appContent}
+			</GoogleOAuthProvider>
+		) : (
+			appContent
+		)}
 	</StrictMode>
 );

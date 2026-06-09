@@ -91,6 +91,20 @@ const optionThemes = {
 	},
 };
 
+function CreateTripGoogleButton({ onSuccess, className }) {
+	const login = useGoogleLogin({
+		onSuccess,
+		onError: (error) => console.log(error),
+	});
+
+	return (
+		<Button onClick={login} className={className}>
+			<FcGoogle />
+			Sign In
+		</Button>
+	);
+}
+
 function CreateTrip() {
 	const [formData, setFormData] = useState({});
 	const [openDialog, setOpenDialog] = useState(false);
@@ -99,6 +113,7 @@ function CreateTrip() {
 	const aiProxyUrl = import.meta.env.VITE_AI_PROXY_URL;
 	const mapboxPublicToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
 	const aiDisabled = !aiProxyUrl;
+	const googleAuthEnabled = Boolean(import.meta.env.VITE_GOOGLE_CLIENT_AUTH_KEY);
 
 	const navigate = useNavigate();
 
@@ -108,11 +123,6 @@ function CreateTrip() {
 			[name]: value,
 		}));
 	};
-
-	const login = useGoogleLogin({
-		onSuccess: (res) => getUserProfile(res),
-		onError: (error) => console.log(error),
-	});
 
 	const onTripGenerate = async () => {
 		if (aiDisabled) {
@@ -355,13 +365,22 @@ function CreateTrip() {
 								Sign In With Google
 							</h5>
 							<p>Sign in securely to the app with Google authentication.</p>
-							<Button
-								onClick={login}
-								className="mt-5 flex w-full items-center gap-2"
-							>
-								<FcGoogle />
-								Sign In
-							</Button>
+							{googleAuthEnabled ? (
+								<CreateTripGoogleButton
+									onSuccess={(res) => getUserProfile(res)}
+									className="mt-5 flex w-full items-center gap-2"
+								/>
+							) : (
+								<Button
+									onClick={() =>
+										toast("Google sign-in is disabled in this demo build.")
+									}
+									className="mt-5 flex w-full items-center gap-2"
+								>
+									<FcGoogle />
+									Sign In Disabled
+								</Button>
+							)}
 						</DialogDescription>
 					</DialogHeader>
 				</DialogContent>
