@@ -82,6 +82,14 @@ npm run lint
 
 ## Production Deployment
 
+### Vite Base Path
+
+The app automatically uses `/` on Vercel and `/ai-trip-planner/` elsewhere for GitHub Pages. If you need to override this, set:
+
+```env
+VITE_BASE_PATH=/
+```
+
 ### Frontend on GitHub Pages
 
 GitHub Pages serves the static Vite build. Only browser-safe variables should be present in the frontend build:
@@ -105,6 +113,12 @@ ALLOWED_ORIGIN=https://amazingdude.github.io
 `OPENROUTER_API_KEY` is server-only and should never be prefixed with `VITE_`.
 
 After deploying the Vercel project, copy its function URL into the GitHub Pages frontend build as `VITE_AI_PROXY_URL`.
+
+If the frontend is also deployed on the same Vercel project, `VITE_AI_PROXY_URL` can be set to:
+
+```env
+VITE_AI_PROXY_URL=/api/generate-trip
+```
 
 ### Mapbox Token
 
