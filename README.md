@@ -1,6 +1,6 @@
 # TailTrails
 
-TailTrails is an AI trip planner that generates personalized itineraries from a destination, trip length, budget, and traveler group. It uses OpenRouter for itinerary generation, Mapbox Search for destination lookup, Firebase for saved trips, and a polished React/Vite interface.
+TailTrails is an AI trip planner that generates personalized itineraries from a destination, trip length, budget, and traveler group. It uses a small serverless AI proxy for itinerary generation, Mapbox Search for destination lookup, Firebase for saved trips, and a polished React/Vite interface.
 
 ## Screenshots
 
@@ -15,9 +15,9 @@ TailTrails is an AI trip planner that generates personalized itineraries from a 
 ## Features
 
 - AI-generated hotel recommendations and day-by-day places to visit
-- Destination search with Mapbox
+- Destination search with a browser-safe Mapbox public token
 - Google sign-in and saved trips with Firebase
-- OpenRouter free-model routing for itinerary generation
+- Serverless AI proxy for itinerary generation
 - Graceful visual fallbacks when AI-provided image URLs are missing or broken
 - Responsive, editorial-style UI with lucide-react icons
 
@@ -28,25 +28,31 @@ TailTrails is an AI trip planner that generates personalized itineraries from a 
 - Tailwind CSS 4
 - Firebase / Firestore
 - Mapbox Search
-- OpenRouter API
+- Vercel serverless functions
 - lucide-react
 
 ## Environment Variables
 
-Create a `.env.local` file using `.env.local.example` as a starting point:
+Create a `.env.local` file using `.env.example` as a starting point:
 
 ```env
-VITE_OPENROUTER_API_KEY=your_openrouter_api_key_here
-VITE_MAPBOX_API_KEY=your_mapbox_api_key_here
-VITE_GOOGLE_CLIENT_AUTH_KEY=your_google_oauth_client_id_here
-VITE_GOOGLE_API_KEY=your_firebase_api_key_here
-VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_sender_id
-VITE_FIREBASE_APP_ID=your_firebase_app_id
-VITE_FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id
+VITE_AI_PROXY_URL=
+VITE_MAPBOX_PUBLIC_TOKEN=
 ```
+
+`VITE_AI_PROXY_URL` should point at the deployed AI proxy endpoint, for example:
+
+```env
+VITE_AI_PROXY_URL=https://your-vercel-app.vercel.app/api/generate-trip
+```
+
+For local Vercel development, it can be:
+
+```env
+VITE_AI_PROXY_URL=http://localhost:3000/api/generate-trip
+```
+
+Do not put OpenRouter keys in frontend `VITE_*` variables. The proxy reads `OPENROUTER_API_KEY` from the server environment only.
 
 ## Getting Started
 
@@ -73,3 +79,33 @@ Run lint checks:
 ```bash
 npm run lint
 ```
+
+## Production Deployment
+
+### Frontend on GitHub Pages
+
+GitHub Pages serves the static Vite build. Only browser-safe variables should be present in the frontend build:
+
+- `VITE_AI_PROXY_URL`
+- `VITE_MAPBOX_PUBLIC_TOKEN`
+
+Never deploy `sk.*` Mapbox secret tokens or OpenRouter API keys in a Vite frontend bundle.
+
+### AI Proxy on Vercel
+
+The serverless function lives at `api/generate-trip.js` and is compatible with Vercel.
+
+Set these Vercel environment variables:
+
+```env
+OPENROUTER_API_KEY=your_server_only_openrouter_key
+ALLOWED_ORIGIN=https://amazingdude.github.io
+```
+
+`OPENROUTER_API_KEY` is server-only and should never be prefixed with `VITE_`.
+
+After deploying the Vercel project, copy its function URL into the GitHub Pages frontend build as `VITE_AI_PROXY_URL`.
+
+### Mapbox Token
+
+Use a browser-safe Mapbox public token for `VITE_MAPBOX_PUBLIC_TOKEN`. Do not use a secret access token in the frontend.

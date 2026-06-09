@@ -96,6 +96,9 @@ function CreateTrip() {
 	const [openDialog, setOpenDialog] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const logoSrc = `${import.meta.env.BASE_URL}logo.svg`;
+	const aiProxyUrl = import.meta.env.VITE_AI_PROXY_URL;
+	const mapboxPublicToken = import.meta.env.VITE_MAPBOX_PUBLIC_TOKEN;
+	const aiDisabled = !aiProxyUrl;
 
 	const navigate = useNavigate();
 
@@ -112,6 +115,11 @@ function CreateTrip() {
 	});
 
 	const onTripGenerate = async () => {
+		if (aiDisabled) {
+			toast("AI features are disabled in this demo build.");
+			return;
+		}
+
 		const user = localStorage.getItem("user");
 		if (!user) {
 			setOpenDialog(true);
@@ -142,7 +150,7 @@ function CreateTrip() {
 				.replace("{traveler}", formData.traveler)
 				.replace("{budget}", formData.budget);
 
-			const result = await generateTripPlan(finalPrompt);
+			const result = await generateTripPlan(finalPrompt, aiProxyUrl);
 
 			if (!result) {
 				setLoading(false);
@@ -214,6 +222,11 @@ function CreateTrip() {
 						Just provide some basic information, and our trip planner will
 						generate a customized itinerary based on your preferences.
 					</p>
+					{aiDisabled && (
+						<p className="mt-4 rounded-2xl bg-[#fbe1d1] px-4 py-3 text-sm font-medium text-[#5d2a1a]">
+							AI features are disabled in this demo build.
+						</p>
+					)}
 				</div>
 			</div>
 
@@ -222,13 +235,24 @@ function CreateTrip() {
 					<h3 className="my-3 text-lg font-medium text-[#17191c]">
 						What is your destination of choice?
 					</h3>
-					<SearchBox
-						accessToken={import.meta.env.VITE_MAPBOX_API_KEY}
-						onRetrieve={(selectedPlace) => {
-							handleInputChange("location", selectedPlace);
-						}}
-						theme={theme}
-					/>
+					{mapboxPublicToken ? (
+						<SearchBox
+							accessToken={mapboxPublicToken}
+							onRetrieve={(selectedPlace) => {
+								handleInputChange("location", selectedPlace);
+							}}
+							theme={theme}
+						/>
+					) : (
+						<Input
+							placeholder="Ex: Islamabad"
+							onChange={(e) =>
+								handleInputChange("location", {
+									features: [{ properties: { name: e.target.value } }],
+								})
+							}
+						/>
+					)}
 				</div>
 				<div>
 					<h3 className="my-3 text-lg font-medium text-[#17191c]">
@@ -310,7 +334,7 @@ function CreateTrip() {
 
 			<div className="mb-10 mt-10 flex justify-center">
 				<Button
-					disabled={loading}
+					disabled={loading || aiDisabled}
 					onClick={onTripGenerate}
 					className="rounded-full"
 				>
