@@ -1,34 +1,42 @@
 import { Button } from "@/components/ui/button";
-import React from "react";
-import { IoIosSend } from "react-icons/io";
+import { CalendarDays, Send, Users, WalletCards } from "lucide-react";
+import SmartImage from "./SmartImage";
 
 function InfoSection({ trip }) {
+	const locationName =
+		trip?.userSelection?.location?.features?.[0]?.properties?.name ||
+		"Trip details";
+	const numOfDays = Number(trip?.userSelection?.numOfDays);
+
 	return (
 		<section className="my-5 flex flex-col gap-2">
-			<img
-				src="/placeholder.jpg"
-				alt="placeholder"
-				className="h-[350px] w-full object-cover rounded-xl"
+			<SmartImage
+				title={locationName}
+				type="hero"
+				className="h-[350px] w-full rounded-[24px] object-cover shadow-[var(--shadow-tailtrails)]"
 			/>
-			<div className="flex justify-between items-center">
+			<div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
 				<div className="my-5 flex flex-col gap-2">
-					<h2 className="font-bold text-2xl">
-						{trip?.userSelection?.location.features[0].properties.name}
+					<h2 className="font-display text-4xl text-[#17191c]">
+						{locationName}
 					</h2>
-					<div className="flex gap-2">
-						<h3 className="p-1 px-3 bg-orange-100 rounded-full text-zinc-800 text-[0.8rem] md:text-md">
-							🗓️{trip?.userSelection?.numOfDays > 1 ? "Days" : "Day"}
-						</h3>
-						<h3 className="p-1 px-3 bg-violet-100 rounded-full text-teal-800 text-[0.8rem] md:text-md">
-							💸{trip?.userSelection?.budget} Budget
-						</h3>
-						<h3 className="p-1 px-3 bg-teal-100 rounded-full text-teal-800 text-[0.8rem] md:text-md">
-							🥂Travelers: {trip?.userSelection?.traveler}
-						</h3>
+					<div className="flex flex-wrap gap-2">
+						<span className="inline-flex items-center gap-1 rounded-full bg-[#fbe1d1] px-3 py-1 text-sm text-[#5d2a1a]">
+							<CalendarDays className="size-4" />
+							{numOfDays} {numOfDays > 1 ? "Days" : "Day"}
+						</span>
+						<span className="inline-flex items-center gap-1 rounded-full bg-[#d3e3fc] px-3 py-1 text-sm text-[#17191c]">
+							<WalletCards className="size-4" />
+							{trip?.userSelection?.budget} Budget
+						</span>
+						<span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-sm text-[#777b86] shadow-sm">
+							<Users className="size-4 text-[#5d2a1a]" />
+							Travelers: {trip?.userSelection?.traveler}
+						</span>
 					</div>
 				</div>
-				<Button>
-					<IoIosSend />
+				<Button size="icon" className="rounded-full">
+					<Send className="text-white" />
 				</Button>
 			</div>
 		</section>

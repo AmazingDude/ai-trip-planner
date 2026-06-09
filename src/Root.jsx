@@ -1,6 +1,7 @@
 // Root.jsx
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import Header from "./components/custom/Header";
 
 export default function Root() {
 	const navigate = useNavigate();
@@ -14,5 +15,10 @@ export default function Root() {
 		}
 	}, [location.search, navigate]);
 
-	return <Outlet />;
+	return (
+		<>
+			<Header />
+			<Outlet />
+		</>
+	);
 }

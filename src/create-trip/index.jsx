@@ -1,47 +1,112 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AI_PROMPT, BudgetOptions, TravelsList } from "@/constants/options";
-import { geminiGen } from "@/service/AIModel";
+import { generateTripPlan } from "@/service/AIModel";
+import { db } from "@/service/firebaseConfig";
 import { SearchBox } from "@mapbox/search-js-react";
-import React, { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+import { doc, setDoc } from "firebase/firestore";
+import {
+	BadgeDollarSign,
+	Gem,
+	Heart,
+	Home,
+	LoaderCircle,
+	Plane,
+	Route,
+	Sailboat,
+	Users,
+	Wallet,
+} from "lucide-react";
+import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
 	Dialog,
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
 } from "@/components/ui/dialog";
-import { useGoogleLogin } from "@react-oauth/google";
-import axios from "axios";
-import { doc, setDoc } from "firebase/firestore";
-import { db } from "@/service/firebaseConfig";
-import { useNavigate } from "react-router-dom";
+
+const optionIcons = {
+	badgeDollar: BadgeDollarSign,
+	gem: Gem,
+	heart: Heart,
+	home: Home,
+	plane: Plane,
+	sailboat: Sailboat,
+	wallet: Wallet,
+};
+
+const optionThemes = {
+	badgeDollar: {
+		bg: "bg-emerald-50",
+		border: "border-emerald-500",
+		icon: "text-emerald-600",
+		ring: "bg-emerald-50",
+	},
+	gem: {
+		bg: "bg-sky-50",
+		border: "border-sky-500",
+		icon: "text-sky-600",
+		ring: "bg-sky-50",
+	},
+	heart: {
+		bg: "bg-rose-50",
+		border: "border-rose-500",
+		icon: "text-rose-500",
+		ring: "bg-rose-50",
+	},
+	home: {
+		bg: "bg-amber-50",
+		border: "border-amber-500",
+		icon: "text-amber-600",
+		ring: "bg-amber-50",
+	},
+	plane: {
+		bg: "bg-blue-50",
+		border: "border-blue-500",
+		icon: "text-blue-600",
+		ring: "bg-blue-50",
+	},
+	route: {
+		bg: "bg-indigo-50",
+		border: "border-indigo-500",
+		icon: "text-indigo-600",
+		ring: "bg-indigo-50",
+	},
+	sailboat: {
+		bg: "bg-cyan-50",
+		border: "border-cyan-500",
+		icon: "text-cyan-600",
+		ring: "bg-cyan-50",
+	},
+	wallet: {
+		bg: "bg-violet-50",
+		border: "border-violet-500",
+		icon: "text-violet-600",
+		ring: "bg-violet-50",
+	},
+};
 
 function CreateTrip() {
-	const [place, setPlace] = useState();
-	const [formData, setFormData] = useState(null);
+	const [formData, setFormData] = useState({});
 	const [openDialog, setOpenDialog] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const logoSrc = `${import.meta.env.BASE_URL}logo.svg`;
 
 	const navigate = useNavigate();
 
 	const handleInputChange = (name, value) => {
-		setFormData({
-			...formData,
+		setFormData((prev) => ({
+			...prev,
 			[name]: value,
-		});
+		}));
 	};
 
-	useEffect(() => {
-		// console.log(formData);
-	}, [formData]);
-
 	const login = useGoogleLogin({
-		// onSuccess: (res) => console.log(res),
 		onSuccess: (res) => getUserProfile(res),
 		onError: (error) => console.log(error),
 	});
@@ -53,40 +118,46 @@ function CreateTrip() {
 			return;
 		}
 
+		const totalDays = Number(formData?.numOfDays);
+		const locationName =
+			formData?.location?.features?.[0]?.properties?.name ||
+			formData?.location?.features?.[0]?.properties?.full_address;
+
 		if (
-			formData?.numOfDays > 5 ||
-			formData?.numOfDays < 1 ||
-			!formData?.location ||
+			totalDays > 5 ||
+			totalDays < 1 ||
+			!locationName ||
 			!formData?.budget ||
 			!formData?.traveler
 		) {
-			toast("Please select valid options :)");
+			toast("Please choose a destination, 1-5 days, budget, and travelers.");
 			return;
 		}
 
 		setLoading(true);
 
-		const FINAL_PROMPT = AI_PROMPT.replace(
-			"{location}",
-			formData?.location?.features[0].properties.name
-		)
-			.replace("{totalDays}", formData?.numOfDays)
-			.replace("{traveler}", formData?.traveler)
-			.replace("{budget}", formData?.budget)
-			.replace("{totalDays}", formData?.numOfDays);
+		try {
+			const finalPrompt = AI_PROMPT.replace("{location}", locationName)
+				.replaceAll("{totalDays}", totalDays)
+				.replace("{traveler}", formData.traveler)
+				.replace("{budget}", formData.budget);
 
-		// console.log("🎯 Sending Prompt:", FINAL_PROMPT);
+			const result = await generateTripPlan(finalPrompt);
 
-		const result = await geminiGen(FINAL_PROMPT);
+			if (!result) {
+				setLoading(false);
+				return;
+			}
 
-		if (result) {
-			// console.log("🌍 Generated Trip Plan:", result);
+			await saveAITripData(result);
+		} catch (error) {
+			console.error(error);
+			toast("Could not generate your trip. Please try again.");
+			setLoading(false);
 		}
-		saveAITripData(result);
 	};
 
 	const getUserProfile = (tokenInfo) => {
-		// console.log("Token Info received:", tokenInfo);
 		axios
 			.get(
 				`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${tokenInfo?.access_token}`,
@@ -98,7 +169,6 @@ function CreateTrip() {
 				}
 			)
 			.then((res) => {
-				// console.log(res);
 				localStorage.setItem("user", JSON.stringify(res.data));
 				setOpenDialog(false);
 				onTripGenerate();
@@ -113,7 +183,7 @@ function CreateTrip() {
 		const docID = Date.now().toString();
 		await setDoc(doc(db, "cities", docID), {
 			userSelection: formData,
-			tripData: tripData,
+			tripData,
 			userEmail: user?.email,
 			id: docID,
 		});
@@ -124,114 +194,146 @@ function CreateTrip() {
 	const theme = {
 		variables: {
 			boxShadow: "none",
-			border: "1px solid #ccc",
+			border: "1px solid #d1d5db",
+			borderRadius: "0.5rem",
 		},
 	};
 
 	return (
-		<div className="sm:px-10 md:px-32 lg:px-56 xl:px-72 px-5 mt-10">
-			<h2 className="font-bold text-3xl">
-				Tell us your travel preferences 🏕️🌴
-			</h2>
-			<p className="mt-3 text-gray-500 text-xl">
-				Just provide some basic information, and our trip planner will generate
-				a customized itinerary based on your preferences.
-			</p>
-			<section className="mt-20 flex flex-col gap-10">
+		<div className="bg-[#f7f7f8] px-5 py-10 sm:px-10">
+			<div className="mx-auto max-w-5xl rounded-[32px] bg-white p-6 shadow-[var(--shadow-tailtrails)] sm:p-10">
+			<div className="flex items-start gap-3">
+				<div className="rounded-2xl bg-[#fbe1d1] p-3 text-[#5d2a1a]">
+					<Route className="size-6" />
+				</div>
 				<div>
-					<h3 className="text-xl my-3 font-medium">
-						What is destination of choice?
+					<h2 className="font-display text-4xl leading-tight text-[#17191c]">
+						Tell us your travel preferences
+					</h2>
+					<p className="mt-3 max-w-3xl text-lg leading-8 text-[#4c4c4c]">
+						Just provide some basic information, and our trip planner will
+						generate a customized itinerary based on your preferences.
+					</p>
+				</div>
+			</div>
+
+			<section className="mt-14 flex flex-col gap-10">
+				<div>
+					<h3 className="my-3 text-lg font-medium text-[#17191c]">
+						What is your destination of choice?
 					</h3>
 					<SearchBox
 						accessToken={import.meta.env.VITE_MAPBOX_API_KEY}
-						// onRetrieve={(res) => console.log("Selected:", res)}
 						onRetrieve={(selectedPlace) => {
-							setPlace(selectedPlace);
 							handleInputChange("location", selectedPlace);
-							// console.log(selectedPlace);
-							// setInputValue(selectedPlace.place_name);
 						}}
 						theme={theme}
 					/>
 				</div>
 				<div>
-					<h3 className="text-xl my-3 font-medium">
+					<h3 className="my-3 text-lg font-medium text-[#17191c]">
 						How many days are you planning your trip?
 					</h3>
 					<Input
-						placeholder={"Ex: 2 Days"}
+						min="1"
+						max="5"
+						placeholder="Ex: 2 days"
 						type="number"
 						onChange={(e) => handleInputChange("numOfDays", e.target.value)}
 					/>
 				</div>
 			</section>
+
 			<section className="mt-10">
-				<h3 className="text-xl my-3 font-medium">What is Your Budget?</h3>
-				<div className="grid grid-cols-3 gap-5 mt-5">
-					{BudgetOptions.map((item, index) => (
-						<div
-							key={index}
-							className={`p-4 border cursor-pointer rounded-lg hover:shadow-lg transition duration-150 ${
-								formData?.budget == item.title
-									? "border-[1.5px] shadow-md border-black"
-									: ""
-							}`}
-							onClick={() => handleInputChange("budget", item.title)}
-						>
-							<h4 className="text-4xl">{item.icon}</h4>
-							<h4 className="font-bold text-lg">{item.title}</h4>
-							<p className="text-sm text-gray-500">{item.desc}</p>
-						</div>
-					))}
+				<h3 className="my-3 text-lg font-medium text-[#17191c]">What is your budget?</h3>
+				<div className="mt-5 grid gap-4 sm:grid-cols-3">
+					{BudgetOptions.map((item) => {
+						const Icon = optionIcons[item.icon];
+						const theme = optionThemes[item.icon];
+						const selected = formData?.budget === item.title;
+
+						return (
+							<div
+								key={item.id}
+								className={`cursor-pointer rounded-[24px] border p-5 transition duration-150 hover:-translate-y-0.5 hover:shadow-[var(--shadow-tailtrails)] ${
+									selected
+										? `${theme.border} ${theme.bg} shadow-md`
+										: "border-[#d8d9de] bg-white"
+								}`}
+								onClick={() => handleInputChange("budget", item.title)}
+							>
+								<div
+									className={`mb-4 inline-flex rounded-2xl p-3 ${theme.ring} ${theme.icon}`}
+								>
+									<Icon className="size-6" />
+								</div>
+								<h4 className="text-lg font-semibold text-[#17191c]">{item.title}</h4>
+								<p className="text-sm text-[#777b86]">{item.desc}</p>
+							</div>
+						);
+					})}
 				</div>
 			</section>
+
 			<section className="mt-10">
-				<h3 className="text-xl my-3 font-medium">
-					Who do you plan on traveling with on your next adventure?
+				<h3 className="my-3 text-lg font-medium text-[#17191c]">
+					Who do you plan on traveling with?
 				</h3>
-				<div className="grid grid-cols-3 gap-5 mt-5">
-					{TravelsList.map((item, index) => (
-						<div
-							key={index}
-							className={`p-4 border cursor-pointer rounded-lg hover:shadow-lg transition duration-150 ${
-								formData?.traveler == item.people
-									? "border-[1.5px] shadow-md border-black"
-									: ""
-							}`}
-							onClick={() => handleInputChange("traveler", item.people)}
-						>
-							<h4 className="text-4xl">{item.icon}</h4>
-							<h4 className="font-bold text-lg">{item.title}</h4>
-							<p className="text-sm text-gray-500">{item.desc}</p>
-						</div>
-					))}
+				<div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+					{TravelsList.map((item) => {
+						const Icon = optionIcons[item.icon] || Users;
+						const theme = optionThemes[item.icon] || optionThemes.route;
+						const selected = formData?.traveler === item.people;
+
+						return (
+							<div
+								key={item.id}
+								className={`cursor-pointer rounded-[24px] border p-5 transition duration-150 hover:-translate-y-0.5 hover:shadow-[var(--shadow-tailtrails)] ${
+									selected
+										? `${theme.border} ${theme.bg} shadow-md`
+										: "border-[#d8d9de] bg-white"
+								}`}
+								onClick={() => handleInputChange("traveler", item.people)}
+							>
+								<div
+									className={`mb-4 inline-flex rounded-2xl p-3 ${theme.ring} ${theme.icon}`}
+								>
+									<Icon className="size-6" />
+								</div>
+								<h4 className="text-lg font-semibold text-[#17191c]">{item.title}</h4>
+								<p className="text-sm text-[#777b86]">{item.desc}</p>
+							</div>
+						);
+					})}
 				</div>
 			</section>
-			<div className="mt-10 flex justify-center mb-10">
+
+			<div className="mb-10 mt-10 flex justify-center">
 				<Button
 					disabled={loading}
 					onClick={onTripGenerate}
-					className="cursor-pointer"
+					className="rounded-full"
 				>
 					{loading ? (
-						<AiOutlineLoading3Quarters className="h-7 w-7 animate-spin" />
+						<LoaderCircle className="size-5 animate-spin" />
 					) : (
 						"Generate Trip"
 					)}
 				</Button>
 			</div>
-			<Dialog open={openDialog}>
+
+			<Dialog open={openDialog} onOpenChange={setOpenDialog}>
 				<DialogContent>
 					<DialogHeader>
 						<DialogDescription>
-							<img src="./logo.svg" alt="logo" />
-							<h5 className="font-bold text-lg mt-7 text-gray-800">
+							<img src={logoSrc} alt="TailTrails logo" className="h-12 w-12" />
+							<h5 className="mt-7 text-lg font-bold text-gray-800">
 								Sign In With Google
 							</h5>
-							<p>Sign in securely to the App with Google authentication.</p>
+							<p>Sign in securely to the app with Google authentication.</p>
 							<Button
 								onClick={login}
-								className="w-full mt-5 cursor-pointer flex items-center gap-2 pr-30"
+								className="mt-5 flex w-full items-center gap-2"
 							>
 								<FcGoogle />
 								Sign In
@@ -240,6 +342,7 @@ function CreateTrip() {
 					</DialogHeader>
 				</DialogContent>
 			</Dialog>
+			</div>
 		</div>
 	);
 }

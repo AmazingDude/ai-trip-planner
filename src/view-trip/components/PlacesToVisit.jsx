@@ -1,18 +1,19 @@
-import React from "react";
 import PlaceCardItem from "./PlaceCardItem";
 
 function PlacesToVisit({ trip }) {
+	const itinerary = trip?.tripData?.itinerary || [];
+
 	return (
-		<section>
-			<h2 className="font-bold text-lg">Places to Visit</h2>
+		<section className="mt-10">
+			<h2 className="font-display text-3xl text-[#17191c]">Places to Visit</h2>
 			<div>
-				{trip.tripData?.itinerary.map((item, index) => (
-					<div className="mt-5">
-						<h2 className="font-medium text-lg">{item.day}</h2>
-						<div className="grid md:grid-cols-2 gap-5">
-							{item.places.map((place, index) => (
-								<div>
-									<h4 className="font-medium text-sm text-orange-300">
+				{itinerary.map((item) => (
+					<div key={item.day} className="mt-5">
+						<h3 className="text-lg font-medium text-[#17191c]">{item.day}</h3>
+						<div className="grid gap-5 md:grid-cols-2">
+							{item.places.map((place) => (
+								<div key={`${item.day}-${place.PlaceName}`}>
+									<h4 className="text-sm font-medium text-[#5d2a1a]">
 										{place.BestTimeToVisit}
 									</h4>
 									<PlaceCardItem place={place} />

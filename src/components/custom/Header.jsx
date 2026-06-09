@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "../ui/button";
 import {
 	Popover,
@@ -10,25 +10,24 @@ import {
 	DialogContent,
 	DialogDescription,
 	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
 } from "@/components/ui/dialog";
 import { googleLogout, useGoogleLogin } from "@react-oauth/google";
-import { useNavigation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
+import { LogOut, Map, Plus, Route } from "lucide-react";
 import axios from "axios";
 
 function Header() {
 	const user = JSON.parse(localStorage.getItem("user"));
 	const [openDialog, setOpenDialog] = useState(false);
+	const logoSrc = `${import.meta.env.BASE_URL}logo.svg`;
+
 	const login = useGoogleLogin({
-		// onSuccess: (res) => console.log(res),
 		onSuccess: (res) => getUserProfile(res),
 		onError: (error) => console.log(error),
 	});
 
 	const getUserProfile = (tokenInfo) => {
-		// console.log("Token Info received:", tokenInfo);
 		axios
 			.get(
 				`https://www.googleapis.com/oauth2/v1/userinfo?access_token=${tokenInfo?.access_token}`,
@@ -50,76 +49,86 @@ function Header() {
 			});
 	};
 
-	// useEffect(() => {
-	// 	// console.log(user);
-	// }, []);
-
 	return (
-		<nav className="p-3 border flex justify-between items-center px-5">
-			<a href="/ai-trip-planner">
-				<div className="flex items-center cursor-pointer">
-					<img src="./logo.svg" alt="" />
-					<h1 className="font-bold text-2xl ml-2 font-google-sans text-gray-800">
+		<nav className="sticky top-0 z-40 flex min-h-16 items-center justify-between border-b border-[#e6e6ea] bg-white/90 px-4 py-3 backdrop-blur md:px-8">
+			<Link to="/" className="flex items-center gap-2">
+				<img src={logoSrc} alt="TailTrails logo" className="h-10 w-10" />
+				<div>
+					<h1 className="font-display text-2xl text-[#17191c]">
 						TailTrails
 					</h1>
+					<p className="hidden text-xs text-[#777b86] sm:block">
+						AI trip planner
+					</p>
 				</div>
-			</a>
+			</Link>
 			<div>
 				{user ? (
 					<div className="flex items-center gap-3">
-						<a href="/ai-trip-planner/create-trip">
+						<Link to="/create-trip">
 							<Button
 								variant="outline"
-								className="rounded-full hover:shadow-md cursor-pointer"
+								className="hidden rounded-full border-[#d8d9de] bg-white hover:bg-[#f7f7f8] sm:inline-flex"
 							>
+								<Plus className="text-[#5d2a1a]" />
 								Create Trip
 							</Button>
-						</a>
-						<a href="/ai-trip-planner/my-trips">
+						</Link>
+						<Link to="/my-trips">
 							<Button
 								variant="outline"
-								className="rounded-full hover:shadow-md cursor-pointer"
+								className="rounded-full border-[#d8d9de] bg-white hover:bg-[#f7f7f8]"
 							>
+								<Map className="text-[#17191c]" />
 								My Trips
 							</Button>
-						</a>
+						</Link>
 						<Popover>
-							<PopoverTrigger>
+							<PopoverTrigger asChild>
 								<img
 									src={user?.picture}
-									alt="profile-pic"
-									className="h-[35px] w-[35px] rounded-full cursor-pointer"
+									alt={user?.name ? `${user.name} profile` : "Profile"}
+									className="h-10 w-10 cursor-pointer rounded-full border object-cover"
 								/>
 							</PopoverTrigger>
-							<PopoverContent>
-								<h2
-									className="cursor-pointer"
+							<PopoverContent align="end" className="w-52">
+								<div className="mb-3 border-b pb-3">
+									<p className="truncate text-sm font-medium text-gray-900">
+										{user?.name}
+									</p>
+									<p className="truncate text-xs text-gray-500">{user?.email}</p>
+								</div>
+								<Button
+									variant="ghost"
+									className="w-full justify-start"
 									onClick={() => {
 										googleLogout();
 										localStorage.clear();
 										window.location.reload();
 									}}
 								>
+									<LogOut className="text-rose-500" />
 									Log out
-								</h2>
+								</Button>
 							</PopoverContent>
 						</Popover>
 					</div>
 				) : (
 					<Button
-						className="cursor-pointer"
 						onClick={() => setOpenDialog(true)}
+						className="rounded-full bg-[#17191c] px-5 hover:bg-black"
 					>
+						<Route className="text-white" />
 						Sign In
 					</Button>
 				)}
 			</div>
-			<Dialog open={openDialog}>
+			<Dialog open={openDialog} onOpenChange={setOpenDialog}>
 				<DialogContent>
 					<DialogHeader>
 						<DialogDescription>
 							<div className="flex items-center">
-								<img src="./logo.svg" alt="logo" />
+								<img src={logoSrc} alt="TailTrails logo" className="h-11 w-11" />
 								<h1 className="font-bold text-2xl ml-3 font-google-sans text-gray-800">
 									TailTrails
 								</h1>
@@ -130,7 +139,7 @@ function Header() {
 							<p>Sign in securely to the App with Google authentication.</p>
 							<Button
 								onClick={login}
-								className="w-full mt-5 cursor-pointer flex items-center gap-2 pr-30"
+								className="mt-5 flex w-full items-center gap-2"
 							>
 								<FcGoogle />
 								Sign In

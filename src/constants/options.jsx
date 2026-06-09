@@ -2,29 +2,29 @@ export const TravelsList = [
 	{
 		id: 1,
 		title: "Just me",
-		desc: "A sole travels in exploration",
-		icon: "✈️",
+		desc: "A solo traveler ready to explore",
+		icon: "plane",
 		people: "1",
 	},
 	{
 		id: 2,
 		title: "A Couple",
-		desc: "Two travels in tandem",
-		icon: "🥂",
+		desc: "Two travelers planning together",
+		icon: "heart",
 		people: "2 People",
 	},
 	{
 		id: 3,
 		title: "Family",
-		desc: "A sole travels in exploration",
-		icon: "🏡",
+		desc: "A family-friendly trip plan",
+		icon: "home",
 		people: "3 to 5 People",
 	},
 	{
 		id: 4,
 		title: "Friends",
-		desc: "A bunch of thril seekers",
-		icon: "⛵",
+		desc: "A shared adventure with friends",
+		icon: "sailboat",
 		people: "5 to 10 People",
 	},
 ];
@@ -33,20 +33,20 @@ export const BudgetOptions = [
 	{
 		id: 1,
 		title: "Cheap",
-		desc: "Stay Concious of costs",
-		icon: "💵",
+		desc: "Stay conscious of costs",
+		icon: "badgeDollar",
 	},
 	{
 		id: 2,
 		title: "Moderate",
 		desc: "Keep cost on the average side",
-		icon: "💰",
+		icon: "wallet",
 	},
 	{
 		id: 3,
 		title: "Luxury",
-		desc: "Dont worry about cost",
-		icon: "💸",
+		desc: "Do not worry about cost",
+		icon: "gem",
 	},
 ];
 
@@ -54,7 +54,7 @@ export const BudgetOptions = [
 // 	"Generate Travel Plan for Location : {location},for {totalDays} Days for {traveler} with a {budget} budget, give me Hotels options list with HotelName, Hotel address, Price, hotel image url, geo coordinates, rating, descriptions and suggest itinerary with placeName, Place Details, Place Image Url, Geo Coordinates, ticket Pricing, Time travel each of the location for {totalDays} days with each day plan with best time to visit in JSON format.";
 
 export const AI_PROMPT = `
-You are an API. You must ONLY respond with **valid JSON**, without explanations or markdown.
+You are an API. You must only respond with valid JSON, without explanations or markdown.
 
 Generate a travel plan for:
 - Location: {location}
@@ -78,7 +78,6 @@ Return your response in this exact JSON format:
       "Rating": 0.0,
       "Description": ""
     }
-    // Include at least 3 hotel options
   ],
   "itinerary": [
     {
@@ -102,5 +101,5 @@ Return your response in this exact JSON format:
   ]
 }
 
-⚠️ Do NOT include markdown, explanations, code blocks, or extra text — only return the JSON object above. Be sure to include at least **3 hotel options** in the hotelOptions array.
+Do NOT include markdown, explanations, comments, code blocks, or extra text. Only return the JSON object above. Be sure to include at least 3 hotel options in the hotelOptions array. Leave HotelImageURL and PlaceImageURL as empty strings unless you are certain the image URL is direct, stable, and publicly hotlinkable.
 `;
